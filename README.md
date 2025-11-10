@@ -15,7 +15,7 @@ A Python CLI frontend for the [Context7 MCP server](https://github.com/upstash/c
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Node.js and npm (for running the Context7 MCP server via npx)
 
 ### Install from source
@@ -253,7 +253,7 @@ black context7_cli/
 
 This project uses GitHub Actions for CI/CD. On every push to `main` or pull request:
 
-1. **Tests** run on Python 3.8, 3.9, 3.10, 3.11, and 3.12
+1. **Tests** run on Python 3.10, 3.11, and 3.12
 2. **Linting** checks code formatting with Black
 3. **Type checking** with mypy
 4. **Build** creates distribution packages

@@ -7,7 +7,7 @@ name = "context7-cli"
 version = "0.1.0"
 description = "CLI frontend for Context7 MCP server"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Context7 CLI Contributors"}
