@@ -19,17 +19,6 @@ from .mcp_client import Context7Client
 console = Console()
 
 
-def handle_error(func):
-    """Decorator to handle errors gracefully."""
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            console.print(f"[bold red]Error:[/bold red] {str(e)}")
-            sys.exit(1)
-    return wrapper
-
-
 @click.group()
 @click.option(
     "--api-key",
@@ -62,7 +51,6 @@ def cli(ctx, api_key: Optional[str], server_command: Optional[str]):
 @click.argument("library_name")
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON")
 @click.pass_context
-@handle_error
 def resolve(ctx, library_name: str, output_json: bool):
     """
     Resolve a library name to a Context7-compatible library ID.
@@ -73,30 +61,34 @@ def resolve(ctx, library_name: str, output_json: bool):
 
         c7 resolve @upstash/redis
     """
-    async def _resolve():
-        async with Context7Client(
-            api_key=ctx.obj["api_key"],
-            server_command=ctx.obj["server_command"]
-        ) as client:
-            result = await client.resolve_library_id(library_name)
+    try:
+        async def _resolve():
+            async with Context7Client(
+                api_key=ctx.obj["api_key"],
+                server_command=ctx.obj["server_command"]
+            ) as client:
+                result = await client.resolve_library_id(library_name)
 
-            if output_json:
-                console.print_json(data=result)
-            else:
-                # Pretty print the result
-                if isinstance(result, dict):
-                    table = Table(title=f"Resolved: {library_name}", show_header=True)
-                    table.add_column("Field", style="cyan")
-                    table.add_column("Value", style="green")
-
-                    for key, value in result.items():
-                        table.add_row(str(key), str(value))
-
-                    console.print(table)
+                if output_json:
+                    console.print_json(data=result)
                 else:
-                    console.print(result)
+                    # Pretty print the result
+                    if isinstance(result, dict):
+                        table = Table(title=f"Resolved: {library_name}", show_header=True)
+                        table.add_column("Field", style="cyan")
+                        table.add_column("Value", style="green")
 
-    asyncio.run(_resolve())
+                        for key, value in result.items():
+                            table.add_row(str(key), str(value))
+
+                        console.print(table)
+                    else:
+                        console.print(result)
+
+        asyncio.run(_resolve())
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+        sys.exit(1)
 
 
 @cli.command()
@@ -106,7 +98,6 @@ def resolve(ctx, library_name: str, output_json: bool):
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON")
 @click.option("--output", "-o", type=click.Path(), help="Save output to file")
 @click.pass_context
-@handle_error
 def docs(
     ctx,
     library_name: Optional[str],
@@ -132,80 +123,87 @@ def docs(
         console.print("[bold red]Error:[/bold red] Either LIBRARY_NAME or --library-id must be provided")
         sys.exit(1)
 
-    async def _get_docs():
-        async with Context7Client(
-            api_key=ctx.obj["api_key"],
-            server_command=ctx.obj["server_command"]
-        ) as client:
-            result = await client.get_library_docs(
-                library_id=library_id,
-                library_name=library_name,
-                query=query
-            )
+    try:
+        async def _get_docs():
+            async with Context7Client(
+                api_key=ctx.obj["api_key"],
+                server_command=ctx.obj["server_command"]
+            ) as client:
+                result = await client.get_library_docs(
+                    library_id=library_id,
+                    library_name=library_name,
+                    query=query
+                )
 
-            # Format the output
-            if output_json:
-                output_text = json.dumps(result, indent=2)
-            else:
-                # Extract and format the documentation content
-                if isinstance(result, dict):
-                    content = result.get("content", str(result))
-                else:
-                    content = str(result)
-
-                output_text = content
-
-            # Output to file or console
-            if output:
-                with open(output, "w") as f:
-                    f.write(output_text)
-                console.print(f"[green]Documentation saved to:[/green] {output}")
-            else:
+                # Format the output
                 if output_json:
-                    console.print_json(data=result)
+                    output_text = json.dumps(result, indent=2)
                 else:
-                    # Display with rich formatting
-                    panel = Panel(
-                        output_text,
-                        title=f"📚 Documentation: {library_name or library_id}",
-                        border_style="blue"
-                    )
-                    console.print(panel)
+                    # Extract and format the documentation content
+                    if isinstance(result, dict):
+                        content = result.get("content", str(result))
+                    else:
+                        content = str(result)
 
-    asyncio.run(_get_docs())
+                    output_text = content
+
+                # Output to file or console
+                if output:
+                    with open(output, "w") as f:
+                        f.write(output_text)
+                    console.print(f"[green]Documentation saved to:[/green] {output}")
+                else:
+                    if output_json:
+                        console.print_json(data=result)
+                    else:
+                        # Display with rich formatting
+                        panel = Panel(
+                            output_text,
+                            title=f"📚 Documentation: {library_name or library_id}",
+                            border_style="blue"
+                        )
+                        console.print(panel)
+
+        asyncio.run(_get_docs())
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+        sys.exit(1)
 
 
 @cli.command()
 @click.pass_context
-@handle_error
 def tools(ctx):
     """
     List all available tools from the Context7 MCP server.
     """
-    async def _list_tools():
-        async with Context7Client(
-            api_key=ctx.obj["api_key"],
-            server_command=ctx.obj["server_command"]
-        ) as client:
-            tools_list = await client.list_tools()
+    try:
+        async def _list_tools():
+            async with Context7Client(
+                api_key=ctx.obj["api_key"],
+                server_command=ctx.obj["server_command"]
+            ) as client:
+                tools_list = await client.list_tools()
 
-            table = Table(title="Available Context7 MCP Tools", show_header=True)
-            table.add_column("Tool Name", style="cyan")
-            table.add_column("Description", style="green")
+                table = Table(title="Available Context7 MCP Tools", show_header=True)
+                table.add_column("Tool Name", style="cyan")
+                table.add_column("Description", style="green")
 
-            for tool in tools_list:
-                if isinstance(tool, dict):
-                    name = tool.get("name", "Unknown")
-                    description = tool.get("description", "No description")
-                else:
-                    name = str(tool)
-                    description = ""
+                for tool in tools_list:
+                    if isinstance(tool, dict):
+                        name = tool.get("name", "Unknown")
+                        description = tool.get("description", "No description")
+                    else:
+                        name = str(tool)
+                        description = ""
 
-                table.add_row(name, description)
+                    table.add_row(name, description)
 
-            console.print(table)
+                console.print(table)
 
-    asyncio.run(_list_tools())
+        asyncio.run(_list_tools())
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+        sys.exit(1)
 
 
 @cli.command()
