@@ -215,8 +215,32 @@ c7-cli/
 
 ### Running Tests
 
+Install test dependencies:
+
+```bash
+pip install -e ".[dev]"
+```
+
+Run all tests:
+
 ```bash
 pytest
+```
+
+Run specific test files:
+
+```bash
+# CLI tests (no network required)
+pytest tests/test_cli.py -v
+
+# Integration tests (requires Node.js and network)
+pytest tests/test_integration.py -v
+```
+
+Run tests with coverage:
+
+```bash
+pytest --cov=context7_cli --cov-report=html
 ```
 
 ### Code Formatting
@@ -224,6 +248,17 @@ pytest
 ```bash
 black context7_cli/
 ```
+
+### Continuous Integration
+
+This project uses GitHub Actions for CI/CD. On every push to `main` or pull request:
+
+1. **Tests** run on Python 3.8, 3.9, 3.10, 3.11, and 3.12
+2. **Linting** checks code formatting with Black
+3. **Type checking** with mypy
+4. **Build** creates distribution packages
+
+See `.github/workflows/ci.yml` for details.
 
 ## Troubleshooting
 
