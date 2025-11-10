@@ -1,0 +1,13 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.py"
+      run: uv run ruff format {staged_files}
+      stage_fixed: true
+    lint-ruff:
+      glob: "*.py"
+      run: uv run ruff check {staged_files}
+    lint-mypy:
+      glob: "*.py"
+      run: uv run mypy {staged_files}
